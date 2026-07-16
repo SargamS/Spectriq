@@ -40,24 +40,24 @@ If a stage fails (bad audio, API quota, etc.) it fails *with a reason* attached 
 
 ```
 ┌─────────────────────┐       ┌──────────────────────────────────────────┐
-│   Next.js Frontend   │──────▶│              FastAPI Backend              │
-│  (Vercel)            │       │              (Render, free tier)          │
-│                       │       │                                            │
-│  Upload → Dashboard   │       │  POST /upload ──▶ background thread:      │
-│  → Meeting detail     │       │    1. extract audio    (ffmpeg)           │
-│  → Chat               │       │    2. transcribe        (Groq Whisper)    │
-└──────────┬────────────┘       │    3. summarize          (Groq / Llama)   │
-           │                    │    4. chunk + embed        (Jina)         │
-           │  polls              │    5. done                                │
-           ▼                    │                                            │
-   GET /meetings/{id}           │  POST /meetings/{id}/chat ──▶ retrieval    │
-                                 │    (pgvector cosine search) + Gemini      │
-                                 └──────────────┬─────────────────────────────┘
+│   Next.js Frontend  │──────▶│              FastAPI Backend             │
+│  (Vercel)           │       │              (Render, free tier)         │
+│                     │       │                                          │
+│  Upload → Dashboard │       │  POST /upload ──▶ background thread:     │
+│  → Meeting detail   │       │    1. extract audio    (ffmpeg)          │
+│  → Chat             │       │    2. transcribe        (Groq Whisper)   │
+└──────────┬──────────┘       │    3. summarize          (Groq / Llama)  │
+           │                  │    4. chunk + embed        (Jina)        │
+           │  polls           │    5. done                               │
+           ▼                  │                                          │
+   GET /meetings/{id}         │  POST /meetings/{id}/chat ──▶ retrieval  │
+                              │    (pgvector cosine search) + Gemini     │
+                              └─────────────────┬────────────────────────┘
                                                 │
                                                 ▼
                                      ┌─────────────────────┐
-                                     │  Postgres + pgvector │
-                                     │  (Neon, free tier)   │
+                                     │ Postgres + pgvector │
+                                     │  (Neon, free tier)  │
                                      └─────────────────────┘
 ```
 

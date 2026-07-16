@@ -17,7 +17,7 @@ alembic==1.14.0
 faster-whisper==1.1.0
 
 # --- Summarization ---
-openai==1.59.0
+openai==1.59.9
 
 # --- Chat with meeting (RAG) ---
 pgvector==0.3.6       # SQLAlchemy Vector type + pgvector comparators

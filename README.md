@@ -22,7 +22,7 @@ Drop in an audio or video file of a meeting, and Spectriq:
 3. **Summarizes** it into a title, plain-language summary, key decisions, action items, and open questions (Groq / Llama 3.3)
 4. **Indexes** the transcript so you can **chat with the meeting** afterward — ask "what did we decide about the launch date?" and get an answer grounded in the actual transcript, with timestamps (Jina embeddings + Gemini)
 
-All of it runs on infrastructure that costs **$0/month** — see [Cost breakdown](#-cost-breakdown).
+All of it runs on infrastructure that costs **$0/month** 
 
 ---
 

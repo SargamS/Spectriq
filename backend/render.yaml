@@ -1,0 +1,153 @@
+# Render "Blueprint" file.
+#
+# What this does: lets you deploy the whole backend (database + redis +
+# API + worker) in one shot instead of clicking through 4 separate
+# "New Service" screens.
+#
+# How to use it:
+#   1. Push this `spectriq` folder to its own GitHub repo (or a repo
+#      where this folder is the root Render points at).
+#   2. In the Render dashboard: New -> Blueprint -> pick that repo.
+#      Render finds this file automatically and shows you a preview of
+#      the 4 things it's about to create.
+#   3. Click "Apply". Render creates everything and wires the database/
+#      redis connection strings in automatically.
+#   4. Anything marked "sync: false" below (the API keys) won't be
+#      filled in for you - go to each service's "Environment" tab in
+#      the Render dashboard afterward and paste in your real keys.
+#   5. Update ALLOWED_ORIGINS (in the API service's env vars) to your
+#      real Vercel URL once the frontend is deployed too.
+
+databases:
+  - name: spectriq-db
+    databaseName: spectriq
+    user: spectriq
+    plan: starter
+    postgresMajorVersion: "16"
+    # After this is created, open its "Shell" tab in the Render
+    # dashboard once and run:  CREATE EXTENSION IF NOT EXISTS vector;
+    # (the app also tries this itself on startup, so this is just belt
+    # and suspenders in case that first startup races the very first
+    # deploy).
+
+services:
+  # ---------- Redis: used as the Celery queue + chat rate limiter ----------
+  - type: redis
+    name: spectriq-redis
+    plan: starter
+    ipAllowList: [] # only reachable from other services in this Render account
+
+  # ---------- The API (the "waiter") ----------
+  - type: web
+    name: spectriq-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: spectriq-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: spectriq-redis
+          property: connectionString
+
+      # --- Required: summarization won't work without this ---
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o
+
+      # --- Optional: only needed for the "chat with meeting" tab ---
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_EMBEDDING_MODEL
+        value: gemini-embedding-001
+      - key: GEMINI_EMBEDDING_DIM
+        value: "768"
+      - key: GEMINI_CHAT_MODEL
+        value: gemini-2.5-flash
+
+      # --- CORS: set this to your real Vercel URL after deploying it ---
+      - key: ALLOWED_ORIGINS
+        value: http://localhost:3000
+
+      # --- File storage: required to be "s3" once API + worker are
+      # separate services (they don't share a disk) - see storage.py.
+      # Fill in a real bucket + credentials before your first upload.
+      - key: STORAGE_BACKEND
+        value: s3
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_REGION
+        value: auto
+      - key: S3_ENDPOINT_URL
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+
+      - key: MAX_UPLOAD_SIZE_MB
+        value: "500"
+      - key: WHISPER_MODEL_SIZE
+        value: base
+      - key: WHISPER_DEVICE
+        value: cpu
+      - key: WHISPER_COMPUTE_TYPE
+        value: int8
+      - key: CHAT_RATE_LIMIT_PER_HOUR
+        value: "20"
+
+  # ---------- The worker (the "chef") - same image, different command ----------
+  - type: worker
+    name: spectriq-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: celery -A app.workers.celery_worker worker --loglevel=info
+    plan: starter
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: spectriq-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: spectriq-redis
+          property: connectionString
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_EMBEDDING_MODEL
+        value: gemini-embedding-001
+      - key: GEMINI_EMBEDDING_DIM
+        value: "768"
+      - key: GEMINI_CHAT_MODEL
+        value: gemini-2.5-flash
+      - key: STORAGE_BACKEND
+        value: s3
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_REGION
+        value: auto
+      - key: S3_ENDPOINT_URL
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: WHISPER_MODEL_SIZE
+        value: base
+      - key: WHISPER_DEVICE
+        value: cpu
+      - key: WHISPER_COMPUTE_TYPE
+        value: int8

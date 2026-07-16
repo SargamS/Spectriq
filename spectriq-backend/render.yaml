@@ -46,8 +46,8 @@ services:
   - type: web
     name: spectriq-api
     runtime: docker
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    dockerfilePath: spectriq-backend/Dockerfile
+    dockerContext: spectriq-backend
     plan: free
     healthCheckPath: /health
     envVars:

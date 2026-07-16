@@ -9,10 +9,8 @@
 [![Deploy](https://img.shields.io/badge/deploy-Render%20%2B%20Vercel-9146FF)](#-deployment)
 [![Cost](https://img.shields.io/badge/infra%20cost-%240%2Fmo-2ea44f)](#-cost-breakdown)
 
-</div>
-
 ### 🔗 [Live Demo](https://spectriq.vercel.app/) · [Report Bug](https://github.com/SargamS/SamudraSetu-/issues) · [Request Feature](https://github.com/SargamS/SamudraSetu-/issues)
-
+</div>
 ---
 
 ## What it does

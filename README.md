@@ -11,6 +11,8 @@
 
 </div>
 
+### 🔗 [Live Demo](https://spectriq.vercel.app/)
+
 ---
 
 ## What it does
@@ -23,16 +25,6 @@ Drop in an audio or video file of a meeting, and Spectriq:
 4. **Indexes** the transcript so you can **chat with the meeting** afterward — ask "what did we decide about the launch date?" and get an answer grounded in the actual transcript, with timestamps (Jina embeddings + Gemini)
 
 All of it runs on infrastructure that costs **$0/month** — see [Cost breakdown](#-cost-breakdown).
-
-## Live progress, not a spinner
-
-The frontend polls processing status and shows exactly which stage a meeting is in:
-
-```
-Extracting Audio → Transcribing → Summarizing → Finishing Up
-```
-
-If a stage fails (bad audio, API quota, etc.) it fails *with a reason* attached to the meeting, and can be retried from that exact stage — no re-uploading, no re-running the expensive transcription step just because summarization hiccuped.
 
 ---
 
@@ -150,19 +142,6 @@ Quick version:
 2. Get `GROQ_API_KEY`, `JINA_API_KEY`, `GEMINI_API_KEY`
 3. Render → New → Blueprint → point at `spectriq-backend/render.yaml` → fill in env vars
 4. Deploy the frontend to Vercel, set `ALLOWED_ORIGINS` on the backend to your Vercel URL
-
-## 💸 Cost breakdown
-
-| Service | Tier used | Cost |
-|---|---|---|
-| Render (API hosting) | Free web service | $0 |
-| Neon (Postgres + pgvector) | Free, permanent, no expiry | $0 |
-| Vercel (frontend hosting) | Free (Hobby) | $0 |
-| Groq (transcription + summarization) | Free tier | $0 |
-| Jina AI (embeddings) | Free tier | $0 |
-| Gemini (chat answers) | Free tier | $0 |
-
-**Known trade-off:** Render's free web services spin down after inactivity and take ~30-60s to wake back up. The frontend's status polling keeps it awake during an active job.
 
 ---
 

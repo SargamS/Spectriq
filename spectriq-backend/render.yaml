@@ -1,0 +1,96 @@
+# Render "Blueprint" file.
+#
+# What this does: lets you deploy the backend API as a single free web
+# service on Render.
+#
+# This used to also create a Redis instance + a separate Background
+# Worker service for a Celery pipeline, plus a Render-managed Postgres
+# database. Both are gone now:
+#   - Background Workers have no free tier on Render, so requiring one
+#     meant this could never be deployed for $0. The pipeline now runs
+#     in-process on a background thread (see app/background.py).
+#   - Render's free Postgres auto-deletes after 30 days. Instead, this
+#     points at a database on Neon (neon.com) - a genuinely permanent
+#     free Postgres tier with pgvector built in, no credit card, no
+#     expiry. You create that database yourself (see DEPLOY.md) and
+#     paste its connection string in as DATABASE_URL below.
+#
+# How to use it:
+#   1. Push this repo to GitHub, with this file at spectriq-backend/render.yaml
+#      (or wherever your backend folder ends up as the repo root Render
+#      points at).
+#   2. Create a free Neon project (see DEPLOY.md Step 1) and copy its
+#      connection string.
+#   3. In the Render dashboard: New -> Blueprint -> pick that repo.
+#      - Branch: whichever branch has your code (usually `main`)
+#      - Blueprint Path: point it at wherever this file actually lives
+#        (e.g. `backend/render.yaml` if your backend code is inside a
+#        `backend` folder rather than the repo root)
+#      Render shows you a preview of the 1 thing it's about to create.
+#   4. Click "Apply". Once created, go into spectriq-api's "Environment"
+#      tab and fill in every value marked "sync: false" below -
+#      including DATABASE_URL with your Neon connection string.
+#   5. Update ALLOWED_ORIGINS (in the env vars) to your real Vercel URL
+#      once the frontend is deployed too.
+#
+# Free-tier caveat worth knowing:
+#   - Free web services on Render spin down after a period of no HTTP
+#     traffic, and take ~30-60s to spin back up on the next request. The
+#     frontend's polling while a meeting is processing keeps it awake
+#     during a job; it may go to sleep between visits otherwise. (Neon's
+#     database has its own, separate scale-to-zero behavior - it just
+#     wakes up in a few hundred ms on the next query, no action needed.)
+
+services:
+  # ---------- The API - also runs the processing pipeline in-process ----------
+  - type: web
+    name: spectriq-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      # --- Your Neon connection string (see DEPLOY.md Step 1). Use the
+      # "postgresql+psycopg2://" prefix instead of Neon's default
+      # "postgresql://" so SQLAlchemy picks the right driver, and keep
+      # "?sslmode=require" at the end - Neon requires SSL connections. ---
+      - key: DATABASE_URL
+        sync: false
+
+      # --- Required: summarization won't work without this ---
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o
+
+      # --- Optional: only needed for the "chat with meeting" tab ---
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_EMBEDDING_MODEL
+        value: gemini-embedding-001
+      - key: GEMINI_EMBEDDING_DIM
+        value: "768"
+      - key: GEMINI_CHAT_MODEL
+        value: gemini-2.5-flash
+
+      # --- CORS: set this to your real Vercel URL after deploying it ---
+      - key: ALLOWED_ORIGINS
+        value: http://localhost:3000
+
+      # --- File storage: "local" is fine now - the pipeline runs in the
+      # same process as the API, so they always share a disk. Only switch
+      # to "s3" if you want uploads to survive across instance restarts.
+      - key: STORAGE_BACKEND
+        value: local
+
+      - key: MAX_UPLOAD_SIZE_MB
+        value: "500"
+      - key: WHISPER_MODEL_SIZE
+        value: base
+      - key: WHISPER_DEVICE
+        value: cpu
+      - key: WHISPER_COMPUTE_TYPE
+        value: int8
+      - key: CHAT_RATE_LIMIT_PER_HOUR
+        value: "20"

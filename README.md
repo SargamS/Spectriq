@@ -11,7 +11,7 @@
 
 </div>
 
-### 🔗 [Live Demo](https://spectriq.vercel.app/)
+### 🔗 [Live Demo](https://spectriq.vercel.app/) · [Report Bug](https://github.com/SargamS/SamudraSetu-/issues) · [Request Feature](https://github.com/SargamS/SamudraSetu-/issues)
 
 ---
 

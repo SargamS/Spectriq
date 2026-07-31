@@ -41,6 +41,19 @@ class Settings(BaseSettings):
     JINA_EMBEDDING_MODEL: str = "jina-embeddings-v3"
     JINA_EMBEDDING_DIM: int = 1024  # jina-embeddings-v3's native output size
 
+    # --- Auth (Clerk) ---
+    # Real authentication via Clerk (https://clerk.com). The frontend signs
+    # the user in with Clerk and sends the resulting session JWT as
+    # `Authorization: Bearer <token>` on every request; the backend verifies
+    # that JWT against Clerk's public JWKS rather than trusting a header
+    # (see app/auth.py - this replaces the old X-User-Email stub).
+    #
+    # CLERK_JWKS_URL looks like:
+    #   https://<your-clerk-instance>.clerk.accounts.dev/.well-known/jwks.json
+    # Find it under Clerk Dashboard -> Configure -> API Keys -> Advanced,
+    # or just take your Frontend API URL and append /.well-known/jwks.json.
+    CLERK_JWKS_URL: str = ""
+
     # --- CORS ---
     # Comma-separated list of allowed origins, e.g. "https://spectriq.vercel.app,https://spectriq-staging.vercel.app"
     ALLOWED_ORIGINS: str = "http://localhost:3000"

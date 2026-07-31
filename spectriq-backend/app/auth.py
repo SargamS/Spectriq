@@ -41,7 +41,7 @@ def _jwk_client() -> PyJWKClient:
 
 def _verify_session_token(token: str) -> dict:
     try:
-        signing_key = _jwk_client().signing_key_from_jwt(token)
+        signing_key = _jwk_client().get_signing_key_from_jwt(token)
         claims = jwt.decode(
             token,
             signing_key.key,

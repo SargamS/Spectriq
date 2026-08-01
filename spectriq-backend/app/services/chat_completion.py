@@ -14,15 +14,17 @@ from google.genai.errors import APIError
 from app.config import settings
 from app.models.transcript_chunk import TranscriptChunk
 
-SYSTEM_PROMPT_TEMPLATE = """You are answering questions about a specific meeting titled \
-"{meeting_title}". You are given excerpts retrieved from that meeting's transcript, each \
-labeled with its timestamp range. Answer the user's question using ONLY the information in \
-these excerpts and the prior conversation.
+SYSTEM_PROMPT_TEMPLATE = """You are a helpful assistant. The user is currently viewing a meeting \
+titled "{meeting_title}", and you have excerpts retrieved from that meeting's transcript below, \
+each labeled with its timestamp range.
 
 Rules:
-- If the excerpts don't contain enough information to answer, say so plainly instead of \
-guessing or using outside knowledge.
-- When useful, reference the approximate timestamp(s) your answer is based on (e.g. "around 12:30").
+- If the question is about the meeting, answer it using the transcript excerpts below, and \
+reference the approximate timestamp(s) your answer is based on (e.g. "around 12:30").
+- If the excerpts don't contain enough information to answer a meeting-related question, say so \
+plainly rather than guessing.
+- If the question is unrelated to the meeting (general knowledge, casual conversation, etc.), \
+just answer it normally using your own knowledge.
 - Keep answers concise and directly responsive to the question.
 
 Transcript excerpts:

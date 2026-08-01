@@ -5,11 +5,6 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth, SignIn } from '@clerk/nextjs'
 
-// Split-screen landing + sign-in, matching the two-column reference design:
-// left = branding/marketing, right = the actual Clerk sign-in card.
-// routing="hash" lets <SignIn> render right here on "/" without needing
-// its own dedicated route (the separate /sign-in page still exists too,
-// for any direct links elsewhere in the app).
 export default function LandingPage() {
   const router = useRouter()
   const { isSignedIn, isLoaded } = useAuth()
@@ -113,7 +108,11 @@ export default function LandingPage() {
                 borderRadius: '0.5rem',
               },
               elements: {
-                card: 'border border-[#2A2A2E] shadow-none',
+                rootBox: 'w-full',
+                cardBox: 'w-full shadow-none',
+                card: 'w-full bg-[#141416] border border-[#2A2A2E] shadow-none backdrop-blur-0',
+                header: 'backdrop-blur-0',
+                main: 'backdrop-blur-0',
               },
             }}
           />
